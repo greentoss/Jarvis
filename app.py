@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression
 from functionality import *
 import words
 import voice
+import time, random
 
 # Требуется:
 # pip install vosk
@@ -50,19 +51,33 @@ def recognise(data, vectorizer, clf):
     func_name = answer.split()[0]
 
     #озвучка ответа из модели data_set
-    voice.speaker(answer.replace(func_name, ''))
+    reply = answer.replace(func_name, '')
+    voice.speaker(reply)
 
-    #запуск функции из skills
-    exec(func_name + '()')
+    #запуск функции из functionality
+    func = globals()[func_name]
+    if func.__code__.co_argcount > 0:
+        func(reply)
+    else:
+        func()
 
-
+def greetingMessage(messages):
+    '''Speaks a random message from an array of strings'''
+    if isinstance(messages, list):
+        message = random.choice(messages)
+        print(f"JARVIS: {message}")
+        # Call text-to-speech API here
+        voice.speaker(message)
+    else:
+        print("Error: messages parameter must be a list")
 
 def main():
     '''
     Обучаем матрицу ИИ
     и постоянно слушаем микрофон
     '''
-    voice.speaker('... hello, Vlady. JARVIS is online, and ready to serve!')
+#     voice.speaker('... hello, Vlady. JARVIS is online, and ready to serve!')
+    greetingMessage(words.greetMessages)
 
     #Обучение матрицы на data_set модели
     vectorizer = CountVectorizer()
@@ -87,6 +102,7 @@ def main():
             if rec.AcceptWaveform(data):
                 data = json.loads(rec.Result())['text']
                 print(data)
+#                 print(f"USER: {data}")
                 recognise(data, vectorizer, clf)
 #             else:
     #             print(rec.PartialResult())
