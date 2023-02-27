@@ -1,46 +1,54 @@
-import os, webbrowser, sys, requests, subprocess, pyttsx3, psutil, time, ctypes
+import json
+import os
+
+import docx
+import psutil
+import subprocess
+import sys
+import time
+import webbrowser
+import obswebsocket
 from PIL import ImageGrab
 
 import voice
-import obswebsocket
-import sounddevice as sd
-import queue
-import vosk
-import json
-
-q = queue.Queue()
-model = vosk.Model('model-en')
+from app import setDevice, samplerate, device, sd, vosk, q, model, callbackToListen
 
 try:
-	import requests		#pip install requests
+    import requests  # pip install requests
 except:
-	pass
+    pass
+
 
 def chrome():
-	webbrowser.open('https://www.google.com', new=2)
+    webbrowser.open('https://www.google.com', new=2)
+
 
 def chromeGoogle():
-   	webbrowser.open('https:/google.com', new=2)
+    webbrowser.open('https:/google.com', new=2)
+
 
 def chromeChatGPT():
-   	webbrowser.open('https://chat.openai.com/chat', new=2)
+    webbrowser.open('https://chat.openai.com/chat', new=2)
+
 
 def offBot():
-	'''Отключает бота'''
-	sys.exit()
+    '''Отключает бота'''
+    sys.exit()
+
 
 def passive(reply):
-	'''Функция заглушка при простом диалоге с ботом'''
-	print(f"JARVIS: {reply}")
+    """Функция заглушка при простом диалоге с ботом"""
+    print(f"JARVIS: {reply}")
 # 	pass
 
 def openTelegram():
-    '''Opens the Telegram application'''
+    """Opens the Telegram application"""
     try:
         subprocess.Popen(r'C:/Users/vlady/AppData/Roaming/Telegram Desktop/Telegram.exe')
     except Exception as e:
         voice.speaker('Sorry i can not open Telegram')
         print(f"Error opening Telegram: {e}")
+
 
 def closeTelegram():
     '''Closes the Telegram application'''
@@ -56,6 +64,7 @@ def closeTelegram():
             pass
     print("Telegram process not found")
     return False
+
 
 def startObsRecording():
     '''Starts recording a video inside OBS studio'''
@@ -77,6 +86,7 @@ def startObsRecording():
     finally:
         obsws.disconnect()
 
+
 def stopObsRecording():
     '''Stops the current recording in OBS studio'''
     try:
@@ -95,6 +105,7 @@ def stopObsRecording():
     finally:
         obsws.disconnect()
 
+
 def takeScreenshot():
     '''Takes a screenshot of the entire screen and saves it as a PNG image on the desktop'''
     try:
@@ -108,31 +119,30 @@ def takeScreenshot():
     except Exception as e:
         print(f"Error taking screenshot: {e}")
 
-def callback(indata, frames, time, status):
-    q.put(bytes(indata))
 
 def writeTheNote():
-    '''
+    """
     Listens for speech input and prints the words that are spoken
-    '''
-    device = sd.default.device = 0, 5      #input, output [1, 4]
-    samplerate = int(sd.query_devices(device[0], 'input')['default_samplerate'])
+    """
+    setDevice(0, 5)
+
     with sd.RawInputStream(samplerate=samplerate,
-        blocksize=12000,
-        device=device[0],
-        dtype='int16',
-        channels=1,
-        callback=callback):
+                           blocksize=12000,
+                           device=device[0],
+                           dtype='int16',
+                           channels=1,
+                           callback=callbackToListen):
         rec = vosk.KaldiRecognizer(model, samplerate)
         while True:
             data = q.get()
             if rec.AcceptWaveform(data):
                 data = json.loads(rec.Result())['text']
                 print(f"USER: {data}")
-#                 createDocAndWrite(data)
-                break
+                createDocAndWrite(data)
+                break  # stop listening when phrase collected
             else:
                 print(rec.PartialResult())
+
 
 def createDocAndWrite(data):
     try:
@@ -140,14 +150,15 @@ def createDocAndWrite(data):
         doc = docx.Document()
         doc.add_paragraph(data)
 
-        # Save Word document to current working directory
-        doc.save("transcription.docx")
+        # Save Word document to desktop
+        note_name = time.strftime("screenshot_%Y%m%d-%H%M%S.docx")
+        note_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop', note_name)
+        doc.save(note_path)
 
         print("Transcription saved to 'transcription.docx'")
-    except sr.UnknownValueError:
-        print("Could not understand audio")
-    except sr.RequestError as e:
-        print(f"Could not request results from Speech Recognition service; {e}")
+    except Exception as e:
+        print(f"Error could not dave document: {e}")
+
 
 # def sleepComputer():
 #     confirmation = ""
@@ -200,8 +211,9 @@ def checkWeather():
     try:
         params = {'q': 'Kyiv', 'units': 'metric', 'lang': 'en', 'appid': '2d44b0725ade625eede22d4c56bebb8e'}
 
-#         response = requests.get('https://api.openweathermap.org/data/2.5/weather', params=params)
-        response = requests.get('http://api.openweathermap.org/geo/1.0/direct?q=Kyiv&appid=2d44b0725ade625eede22d4c56bebb8e')
+        #         response = requests.get('https://api.openweathermap.org/data/2.5/weather', params=params)
+        response = requests.get(
+            'http://api.openweathermap.org/geo/1.0/direct?q=Kyiv&appid=2d44b0725ade625eede22d4c56bebb8e')
         print(response)
         if response.status_code != 200:
             raise Exception('Invalid response from API')
@@ -226,5 +238,3 @@ def checkWeather():
 #
 # 	#os.system('shutdown \s')
 # 	print('пк был бы выключен, но команде # в коде мешает;)))')
-
-
