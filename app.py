@@ -5,56 +5,61 @@ import json
 from sklearn.feature_extraction.text import CountVectorizer     #pip install scikit-learn
 from sklearn.linear_model import LogisticRegression
 from functionality import *
-import words
+import wordsCollections
 import voice
 import time, random
 
-# Требуется:
 # pip install vosk
 # pip install sounddevice
 # pip install scikit-learn
 # pip install pyttsx3
-# Не обязательно:
-# pip install requests
+
+BOT_NAME = 'JARVIS'
 
 q = queue.Queue()
-
 model = vosk.Model('model-en')
 
 #command: python -m sounddevice  #shows your devices indexes
 
-device = sd.default.device = 0, 5      #input, output [1, 4]
-samplerate = int(sd.query_devices(device[0], 'input')['default_samplerate'])
+# device = sd.default.device = 0, 5      #input, output [1, 4]
+# samplerate = int(sd.query_devices(device[0], 'input')['default_samplerate'])
 
-def callback(indata, frames, time, status):
+def setDevice(input, output):
+    device = sd.default.device = input, output
+    samplerate = int(sd.query_devices(device[input], 'input')['default_samplerate'])
+
+setDevice(0, 5)
+
+def callbackToListen(indata, frames, time, status):
     q.put(bytes(indata))
 
 def recognise(data, vectorizer, clf):
     '''
-    Анализ распознанной речи
+    Voice recognition analisys
     '''
 
-    #проверяем есть ли имя бота в data, если нет, то return
-    trigger = words.TRIGGERS.intersection(data.split())
+    #check if botname trigger word is in data
+    trigger = wordsCollections.TRIGGERS.intersection(data.split())
     if not trigger:
         return
 
-    #удаляем имя бота из текста
+    #delete bot name from text
     data.replace(list(trigger)[0], '')
 
-    #получаем вектор полученного текста
-    #сравниваем с вариантами, получая наиболее подходящий ответ
+    #get the vector of the text
+    #compare with variants, getting the most sufficient answer
     text_vector = vectorizer.transform([data]).toarray()[0]
     answer = clf.predict([text_vector])[0]
     #     print(answer)
-    #получение имени функции из ответа из data_set
+
+    #get the function name from collection data_set
     func_name = answer.split()[0]
 
-    #озвучка ответа из модели data_set
+    #voice acting of the answer from collection data_set
     reply = answer.replace(func_name, '')
     voice.speaker(reply)
 
-    #запуск функции из functionality
+    #starting the function from "functionality"
     func = globals()[func_name]
     if func.__code__.co_argcount > 0:
         func(reply)
@@ -62,39 +67,36 @@ def recognise(data, vectorizer, clf):
         func()
 
 def greetingMessage(messages):
-    '''Speaks a random message from an array of strings'''
+    '''Speaks a random message from an array of strings from "wordsCollections"'''
     if isinstance(messages, list):
         message = random.choice(messages)
-        print(f"JARVIS: {message}")
-        # Call text-to-speech API here
+        print(f"{BOT_NAME}: {message}")
         voice.speaker(message)
     else:
         print("Error: messages parameter must be a list")
 
 def main():
     '''
-    Обучаем матрицу ИИ
-    и постоянно слушаем микрофон
+    Teaching matrix AI
+    and listen to microphone continuously
     '''
-#     voice.speaker('... hello, Vlady. JARVIS is online, and ready to serve!')
-    greetingMessage(words.greetMessages)
+    greetingMessage(wordsCollections.greetMessages)
 
-    #Обучение матрицы на data_set модели
     vectorizer = CountVectorizer()
-    vectors = vectorizer.fit_transform(list(words.data_set.keys()))
+    vectors = vectorizer.fit_transform(list(wordsCollections.data_set.keys()))
 
     clf = LogisticRegression()
-    clf.fit(vectors, list(words.data_set.values()))
+    clf.fit(vectors, list(wordsCollections.data_set.values()))
 
-    del words.data_set
+    del wordsCollections.data_set
 
-    #постоянная прослушка микрофона
+    #continuously listen to microphone
     with sd.RawInputStream( samplerate = samplerate,   #how many times per second microphone takes data
         blocksize = 12000,           #how mani information is transferred
         device = device[0],            #index of microphone
         dtype = 'int16',
         channels = 1,
-        callback = callback ):
+        callback = callbackToListen ):
 
         rec = vosk.KaldiRecognizer(model, samplerate)
         while True:

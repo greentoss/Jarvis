@@ -1,9 +1,17 @@
-TRIGGERS = {'Jarvis','JARVIS', 'jarvis'}
+from app import BOT_NAME
+TRIGGERS = {BOT_NAME.lower(), f'{BOT_NAME}'}
 
 greetMessages = [
-    "Hello, Vlady. JARVIS is online and ready to serve!",
+    f"Hello, Vlady. {BOT_NAME} is online and ready to serve!",
     "Greetings, Vlady. How can I assist you today?",
-    "Welcome back, Vlady. It's good to hear from you again."
+    "Welcome back, Vlady. It's good to hear from you again.",
+    "Hi there, Vlady. How may I be of assistance?",
+    "Good day, Vlady. How can I help you?",
+    "Hello again, Vlady. What can I do for you?",
+    "Nice to see you again, Vlady. What can I assist you with?",
+    "Howdy, Vlady. What do you need help with today?",
+    "Hello, Vlady. I'm at your service. How can I assist you?",
+    "Hey there, Vlady. What can I do for you today?"
 ]
 
 data_set = {
@@ -16,7 +24,8 @@ data_set = {
 'start OBS recording'  : 'startObsRecording just a moment, starting the OBS recording',
 'stop OBS recording'   : 'stopObsRecording just a moment, terminating the OBS recording',
 'make a screenshot' : 'takeScreenshot click clack',
-'make system sleep' : 'sleepComputer ok, preparing to sleep',
+'write the note' : 'writeTheNote alright im doing, what do you want to   write? ',
+# 'make system sleep' : 'sleepComputer ok, preparing to sleep',
 # 'what is the weather'    : 'checkWeather allright, im checking...',
 # 'what weather is outside': 'checkWeather one moment, fetching...',
 'hey, '             : 'passive yes, master',

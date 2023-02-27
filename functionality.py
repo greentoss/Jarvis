@@ -3,6 +3,13 @@ from PIL import ImageGrab
 
 import voice
 import obswebsocket
+import sounddevice as sd
+import queue
+import vosk
+import json
+
+q = queue.Queue()
+model = vosk.Model('model-en')
 
 try:
 	import requests		#pip install requests
@@ -10,7 +17,6 @@ except:
 	pass
 
 def chrome():
-	'''Открывает браузер заданнный по уполчанию в системе с url указанным здесь'''
 	webbrowser.open('https://www.google.com', new=2)
 
 def chromeGoogle():
@@ -32,7 +38,6 @@ def openTelegram():
     '''Opens the Telegram application'''
     try:
         subprocess.Popen(r'C:/Users/vlady/AppData/Roaming/Telegram Desktop/Telegram.exe')
-#         voice.speaker('the Telegram application has been opened')
     except Exception as e:
         voice.speaker('Sorry i can not open Telegram')
         print(f"Error opening Telegram: {e}")
@@ -103,26 +108,92 @@ def takeScreenshot():
     except Exception as e:
         print(f"Error taking screenshot: {e}")
 
-def sleepComputer():
-    print("You have 20 seconds to confirm the action.")
-    voice.speaker('You have 20 seconds to confirm the action.')
-    start_time = time.time()
-    confirmation = "y"
-    while time.time() - start_time < 20:
-            confirmation = input("Are you sure you want to put the computer to sleep? (y/n): ")
-            if confirmation.lower() == "y":
-                try:
-                    ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
-                except Exception as e:
-                    print(f"Error going to sleep: {e}")
-                    voice.speaker('i cant execute this function, check the code')
-            elif confirmation.lower() == "n":
-                print("Aborted.")
-                voice.speaker('cancel operation')
+def callback(indata, frames, time, status):
+    q.put(bytes(indata))
+
+def writeTheNote():
+    '''
+    Listens for speech input and prints the words that are spoken
+    '''
+    device = sd.default.device = 0, 5      #input, output [1, 4]
+    samplerate = int(sd.query_devices(device[0], 'input')['default_samplerate'])
+    with sd.RawInputStream(samplerate=samplerate,
+        blocksize=12000,
+        device=device[0],
+        dtype='int16',
+        channels=1,
+        callback=callback):
+        rec = vosk.KaldiRecognizer(model, samplerate)
+        while True:
+            data = q.get()
+            if rec.AcceptWaveform(data):
+                data = json.loads(rec.Result())['text']
+                print(f"USER: {data}")
+#                 createDocAndWrite(data)
                 break
-    else:
-        print("Aborted.")
-        voice.speaker('Aborted operation')
+            else:
+                print(rec.PartialResult())
+
+def createDocAndWrite(data):
+    try:
+        # Create new Word document and add text from data
+        doc = docx.Document()
+        doc.add_paragraph(data)
+
+        # Save Word document to current working directory
+        doc.save("transcription.docx")
+
+        print("Transcription saved to 'transcription.docx'")
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+    except sr.RequestError as e:
+        print(f"Could not request results from Speech Recognition service; {e}")
+
+# def sleepComputer():
+#     confirmation = ""
+#     while confirmation not in ["y", "n"]:
+#         confirmation = input("Are you sure you want to put the computer to sleep? (y/n): ")
+#     if confirmation.lower() == "y":
+#         try:
+# #             ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
+#             print('sleep')
+#         except Exception as e:
+#             print(f"Error going to sleep: {e}")
+#             voice.speaker('i cant execute this function, check the code')
+#     else:
+#         print("Aborted.")
+#         voice.speaker('cancel operation')
+
+
+# def sleepComputer():
+#     print("You have 20 seconds to confirm the action.")
+#     # voice.speaker('You have 20 seconds to confirm the action.')
+#     r = sr.Recognizer()
+#     mic = sr.Microphone()
+#     with mic as source:
+#         r.adjust_for_ambient_noise(source)
+#         audio = r.listen(source, timeout=20)
+#         try:
+#             confirmation = r.recognize_google(audio)
+#         except sr.UnknownValueError:
+#             print("Could not understand audio")
+#             return
+#         except sr.RequestError as e:
+#             print(f"Could not request results from Google Speech Recognition service; {e}")
+#             return
+#
+#     if confirmation.lower() == "yes":
+#         try:
+#             ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
+#         except Exception as e:
+#             print(f"Error going to sleep: {e}")
+#             # voice.speaker('i cant execute this function, check the code')
+#     elif confirmation.lower() == "no":
+#         print("Aborted.")
+#         # voice.speaker('cancel operation')
+#     else:
+#         print("Invalid response.")
+#         # voice.speaker('invalid response')
 
 def checkWeather():
     '''This function uses the OpenWeatherMap API to get the weather information for Kyiv.'''
