@@ -7,6 +7,8 @@ import vosk
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 
+from config import BOT_NAME
+from functionality import *
 import voice
 import wordsCollections
 
@@ -15,7 +17,6 @@ import wordsCollections
 # pip install scikit-learn
 # pip install pyttsx3
 
-BOT_NAME = 'JARVIS'
 
 q = queue.Queue()
 model = vosk.Model('model-en')
@@ -44,9 +45,9 @@ def callbackToListen(indata, frames, time, status):
 
 
 def recognise(data, vectorizer, clf):
-    '''
-    Voice recognition analisys
-    '''
+    """
+    Voice recognition analysis
+    """
 
     # check if botname trigger word is in data
     trigger = wordsCollections.TRIGGERS.intersection(data.split())
@@ -70,15 +71,18 @@ def recognise(data, vectorizer, clf):
     voice.speaker(reply)
 
     # starting the function from "functionality"
-    func = globals()[func_name]
-    if func.__code__.co_argcount > 0:
-        func(reply)
+    func = globals().get(func_name)
+    if func:
+        if func.__code__.co_argcount > 0:
+            func(reply)
+        else:
+            func()
     else:
-        func()
+        print(f"No function named {func_name} found.")
 
 
 def greetingMessage(messages):
-    '''Speaks a random message from an array of strings from "wordsCollections"'''
+    """Speaks a random message from an array of strings from "wordsCollections\""""
     if isinstance(messages, list):
         message = random.choice(messages)
         print(f"{BOT_NAME}: {message}")

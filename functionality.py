@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 import docx
 import psutil
@@ -9,6 +10,7 @@ import time
 import webbrowser
 import obswebsocket
 from PIL import ImageGrab
+from wordsCollections import phrases_printNote
 
 import voice
 from app import setDevice, samplerate, device, sd, vosk, q, model, callbackToListen
@@ -39,6 +41,8 @@ def offBot():
 def passive(reply):
     """Функция заглушка при простом диалоге с ботом"""
     print(f"JARVIS: {reply}")
+
+
 # 	pass
 
 def openTelegram():
@@ -125,6 +129,8 @@ def writeTheNote():
     Listens for speech input and prints the words that are spoken
     """
     setDevice(0, 5)
+    data_array = []  # initialize an empty array to store the spoken words
+    voice.speaker('im listening, stop command is: stop recording')
 
     with sd.RawInputStream(samplerate=samplerate,
                            blocksize=12000,
@@ -138,22 +144,28 @@ def writeTheNote():
             if rec.AcceptWaveform(data):
                 data = json.loads(rec.Result())['text']
                 print(f"USER: {data}")
-                createDocAndWrite(data)
-                break  # stop listening when phrase collected
-            else:
-                print(rec.PartialResult())
+                data_array.append(data)  # add the spoken words to the array
+                voice.speaker(random.choice(phrases_printNote))  # select a random prompt from the collection
+                if data.lower() == 'stop recording':
+                    createDocAndWrite(data_array)  # pass the array to createDocAndWrite() function
+                    data_array.clear()
+                    break  # stop listening when phrase collected
+            # else:
+            #     print(rec.PartialResult())
 
 
-def createDocAndWrite(data):
+def createDocAndWrite(data_array):
     try:
         # Create new Word document and add text from data
         doc = docx.Document()
-        doc.add_paragraph(data)
+        for data in data_array:
+            doc.add_paragraph(data)
 
         # Save Word document to desktop
         note_name = time.strftime("screenshot_%Y%m%d-%H%M%S.docx")
         note_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop', note_name)
         doc.save(note_path)
+        voice.speaker('all your notes has been saved on desktop')
 
         print("Transcription saved to 'transcription.docx'")
     except Exception as e:
