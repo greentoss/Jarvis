@@ -36,16 +36,14 @@ def chromeChatGPT():
 
 
 def offBot():
-    '''Отключает бота'''
+    """turn off the bot"""
     sys.exit()
 
 
 def passive(reply):
-    """Функция заглушка при простом диалоге с ботом"""
+    """shallow function just dialog vs bot"""
     print(f"{BOT_NAME}: {reply}")
 
-git
-# 	pass
 
 def openTelegram():
     """Opens the Telegram application"""
@@ -57,7 +55,7 @@ def openTelegram():
 
 
 def closeTelegram():
-    '''Closes the Telegram application'''
+    """Closes the Telegram application"""
     for proc in psutil.process_iter():
         try:
             # Look for the Telegram process by name
@@ -72,48 +70,48 @@ def closeTelegram():
     return False
 
 
-def startObsRecording():
-    '''Starts recording a video inside OBS studio'''
-    try:
-        # Connect to the OBS WebSocket server
-        print("Connecting to OBS WebSocket server...")
-        obsws = obswebsocket.obsws("localhost", 4444, "12345678t")
-        print(obws, 'obsws ')
-        obsws.connect()
-
-        # Start recording
-        response = obsws.call(obswebsocket.requests.StartRecording())
-        if not response.status:
-            print("Failed to start recording")
-        else:
-            print("Recording started")
-    except Exception as e:
-        print(f"Error starting OBS recording: {e}")
-    finally:
-        obsws.disconnect()
-
-
-def stopObsRecording():
-    '''Stops the current recording in OBS studio'''
-    try:
-        # Connect to the OBS WebSocket server
-        obsws = obswebsocket.obsws("localhost", 4455, "12345678t")
-        obsws.connect()
-
-        # Stop recording
-        response = obsws.call(obswebsocket.requests.StopRecording())
-        if not response.status:
-            print("Failed to stop recording")
-        else:
-            print("Recording stopped")
-    except Exception as e:
-        print(f"Error stopping OBS recording: {e}")
-    finally:
-        obsws.disconnect()
+# def startObsRecording():
+#     '''Starts recording a video inside OBS studio'''
+#     try:
+#         # Connect to the OBS WebSocket server
+#         print("Connecting to OBS WebSocket server...")
+#         obsws = obswebsocket.obsws("localhost", 4444, "12345678t")
+#         print(obws, 'obsws ')
+#         obsws.connect()
+#
+#         # Start recording
+#         response = obsws.call(obswebsocket.requests.StartRecording())
+#         if not response.status:
+#             print("Failed to start recording")
+#         else:
+#             print("Recording started")
+#     except Exception as e:
+#         print(f"Error starting OBS recording: {e}")
+#     finally:
+#         obsws.disconnect()
+#
+#
+# def stopObsRecording():
+#     '''Stops the current recording in OBS studio'''
+#     try:
+#         # Connect to the OBS WebSocket server
+#         obsws = obswebsocket.obsws("localhost", 4455, "12345678t")
+#         obsws.connect()
+#
+#         # Stop recording
+#         response = obsws.call(obswebsocket.requests.StopRecording())
+#         if not response.status:
+#             print("Failed to stop recording")
+#         else:
+#             print("Recording stopped")
+#     except Exception as e:
+#         print(f"Error stopping OBS recording: {e}")
+#     finally:
+#         obsws.disconnect()
 
 
 def takeScreenshot():
-    '''Takes a screenshot of the entire screen and saves it as a PNG image on the desktop'''
+    """Takes a screenshot of the entire screen and saves it as a PNG image on the desktop"""
     try:
         # Capture a screenshot of the entire screen
         img = ImageGrab.grab()
@@ -124,6 +122,29 @@ def takeScreenshot():
         print(f"Screenshot saved as {img_path}")
     except Exception as e:
         print(f"Error taking screenshot: {e}")
+
+
+def abortExecution():
+    """
+    Listens for speech input and stops all ongoing functions if the phrase "abort execution" is detected
+    """
+    setDevice(0, 5)
+
+    with sd.RawInputStream(samplerate=samplerate,
+                           blocksize=12000,
+                           device=device[0],
+                           dtype='int16',
+                           channels=1,
+                           callback=callbackToListen):
+        rec = vosk.KaldiRecognizer(model, samplerate)
+        while True:
+            data = q.get()
+            if rec.AcceptWaveform(data):
+                data = json.loads(rec.Result())['text']
+                print(f"USER: {data}")
+                if data.lower() == 'abort execution' or data.lower() == 'the abort execution':
+                    # Stop all ongoing functions
+                    return True
 
 
 def writeTheNote():
@@ -142,12 +163,14 @@ def writeTheNote():
                            callback=callbackToListen):
         rec = vosk.KaldiRecognizer(model, samplerate)
         while True:
+            if abortExecution():    # immediately Stop the function
+                return
             data = q.get()
             if rec.AcceptWaveform(data):
                 data = json.loads(rec.Result())['text']
                 print(f"USER: {data}")
                 data_array.append(data)  # add the spoken words to the array
-                if data.lower() == 'stop recording':
+                if data.lower() == 'stop recording' or data.lower() == 'the stop recording':
                     createDocAndWrite(data_array)  # pass the array to createDocAndWrite() function
                     data_array.clear()
                     break  # stop listening when phrase collected
@@ -164,7 +187,7 @@ def createDocAndWrite(data_array):
             doc.add_paragraph(data)
 
         # Save Word document to desktop
-        note_name = time.strftime("screenshot_%Y%m%d-%H%M%S.docx")
+        note_name = time.strftime("document_%Y%m%d-%H%M%S.docx")
         note_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop', note_name)
         doc.save(note_path)
         voice.speaker('all your notes has been saved on desktop')
@@ -174,14 +197,55 @@ def createDocAndWrite(data_array):
         print(f"Error could not dave document: {e}")
 
 
+def confirmCommand(action):
+    """
+    Listens for speech input and prints the words that are spoken
+    """
+    setDevice(0, 5)
+
+    voice.speaker(f'confirm the action {action}, key phrase is: "yes i confirm" or "decline"')
+
+    confirm = None
+
+    with sd.RawInputStream(samplerate=samplerate,
+                           blocksize=12000,
+                           device=device[0],
+                           dtype='int16',
+                           channels=1,
+                           callback=callbackToListen):
+        rec = vosk.KaldiRecognizer(model, samplerate)
+        while True:
+            if abortExecution():    # immediately Stop the function
+                return
+            data = q.get()
+            if rec.AcceptWaveform(data):
+                data = json.loads(rec.Result())['text']
+                print(f"USER: {data}")
+                if data.lower() == 'yes i confirm' or data.lower() == 'yes' or data.lower() == 'the confirm':
+                    confirm = True
+                    voice.speaker('confirm = true')
+                    break  # stop listening when phrase collected
+                if data.lower() == 'no i decline' or data.lower() == 'the decline' or data.lower() == 'no':
+                    confirm = False
+                    voice.speaker('confirm = false')
+                    break  # stop listening when phrase collected
+                voice.speaker('i did not get what you say, repeat pls')  # select a random prompt from the collection
+            # else:
+            #     print(rec.PartialResult())
+    return confirm
+
+
 def sleepComputer():
-    confirmation = ""
-    while confirmation not in ["y", "n"]:
-        confirmation = input("Are you sure you want to put the computer to sleep? (y/n): ")
-    if confirmation.lower() == "y":
+    """
+    Listens for speech input for confirmation and makes computer sleep
+    """
+    confirmation = confirmCommand('sleep the computer')
+    if confirmation:
+        if abortExecution():  # immediately Stop the function
+            return
         try:
             # ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
-            print('sleep')
+            print('sleep the PC')
         except Exception as e:
             print(f"Error going to sleep: {e}")
             voice.speaker('i cant execute this function, check the code')
@@ -190,38 +254,29 @@ def sleepComputer():
         voice.speaker('cancel operation')
 
 
-# def sleepComputer():
-#     print("You have 20 seconds to confirm the action.")
-#     # voice.speaker('You have 20 seconds to confirm the action.')
-#     r = sr.Recognizer()
-#     mic = sr.Microphone()
-#     with mic as source:
-#         r.adjust_for_ambient_noise(source)
-#         audio = r.listen(source, timeout=20)
-#         try:
-#             confirmation = r.recognize_google(audio)
-#         except sr.UnknownValueError:
-#             print("Could not understand audio")
-#             return
-#         except sr.RequestError as e:
-#             print(f"Could not request results from Google Speech Recognition service; {e}")
-#             return
-#
-#     if confirmation.lower() == "yes":
-#         try:
-#             ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
-#         except Exception as e:
-#             print(f"Error going to sleep: {e}")
-#             # voice.speaker('i cant execute this function, check the code')
-#     elif confirmation.lower() == "no":
-#         print("Aborted.")
-#         # voice.speaker('cancel operation')
-#     else:
-#         print("Invalid response.")
-#         # voice.speaker('invalid response')
+def offPc():
+    """
+    Listens for speech input for confirmation and turns off PC
+    """
+    confirmation = confirmCommand('turn off the computer')
+    if confirmation:
+        if abortExecution():  # immediately Stop the function
+            return
+        try:
+            # os.system('shutdown \s')
+            print('turn off PC')
+        except Exception as e:
+            print(f"Error doing turn off: {e}")
+            voice.speaker('i cant execute this function, check the code')
+    else:
+        print("Aborted.")
+        voice.speaker('cancel operation')
+
 
 def checkWeather():
-    '''This function uses the OpenWeatherMap API to get the weather information for Kyiv.'''
+    """
+    This function uses the OpenWeatherMap API to get the weather information for Kyiv.
+    """
     try:
         params = {'q': 'Kyiv', 'units': 'metric', 'lang': 'en', 'appid': '2d44b0725ade625eede22d4c56bebb8e'}
 
@@ -238,17 +293,3 @@ def checkWeather():
         voice.speaker(f"Outside, it is {description} and {temperature} degrees Celsius.")
     except Exception as e:
         voice.speaker(f"Could not connect to API: {e}")
-
-# def game():
-# 	'''Нужно разместить путь к exe файлу любого вашего приложения'''
-# 	try:
-# 		subprocess.Popen('C:/Program Files/paint.net/PaintDotNet.exe')
-# 	except:
-# 		voice.speaker('Путь к файлу не найден, проверьте, правильный ли он')
-#
-#
-# def offpc():
-# 	#Эта команда отключает ПК под управлением Windows
-#
-# 	#os.system('shutdown \s')
-# 	print('пк был бы выключен, но команде # в коде мешает;)))')
