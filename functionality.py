@@ -70,46 +70,6 @@ def closeTelegram():
     return False
 
 
-# def startObsRecording():
-#     '''Starts recording a video inside OBS studio'''
-#     try:
-#         # Connect to the OBS WebSocket server
-#         print("Connecting to OBS WebSocket server...")
-#         obsws = obswebsocket.obsws("localhost", 4444, "12345678t")
-#         print(obws, 'obsws ')
-#         obsws.connect()
-#
-#         # Start recording
-#         response = obsws.call(obswebsocket.requests.StartRecording())
-#         if not response.status:
-#             print("Failed to start recording")
-#         else:
-#             print("Recording started")
-#     except Exception as e:
-#         print(f"Error starting OBS recording: {e}")
-#     finally:
-#         obsws.disconnect()
-#
-#
-# def stopObsRecording():
-#     '''Stops the current recording in OBS studio'''
-#     try:
-#         # Connect to the OBS WebSocket server
-#         obsws = obswebsocket.obsws("localhost", 4455, "12345678t")
-#         obsws.connect()
-#
-#         # Stop recording
-#         response = obsws.call(obswebsocket.requests.StopRecording())
-#         if not response.status:
-#             print("Failed to stop recording")
-#         else:
-#             print("Recording stopped")
-#     except Exception as e:
-#         print(f"Error stopping OBS recording: {e}")
-#     finally:
-#         obsws.disconnect()
-
-
 def takeScreenshot():
     """Takes a screenshot of the entire screen and saves it as a PNG image on the desktop"""
     try:

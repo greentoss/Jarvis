@@ -29,8 +29,6 @@ data_set = {
     'turn on browser'           : 'chrome just a moment, i am doing',
     'open telegram'             : 'openTelegram just a moment, opening telegram',
     'close telegram'            : 'closeTelegram yes, i am doing, closing telegram',
-    # 'start OBS recording'       : 'startObsRecording just a moment, starting the OBS recording',
-    # 'stop OBS recording'        : 'stopObsRecording just a moment, terminating the OBS recording',
     'make a screenshot'         : 'takeScreenshot click clack',
     'screenshot make'           : 'takeScreenshot click clack',
     'record the text'           : 'writeTheNote alright , what do you want to   write? ',

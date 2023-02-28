@@ -79,6 +79,7 @@ def recognise(data, vectorizer, clf):
             func()
     else:
         print(f"No function named {func_name} found.")
+        voice.speaker(f"No function named {func_name} found.")
 
 
 def greetingMessage(messages):
