@@ -163,7 +163,7 @@ def writeTheNote():
                            callback=callbackToListen):
         rec = vosk.KaldiRecognizer(model, samplerate)
         while True:
-            if abortExecution():    # immediately Stop the function
+            if abortExecution():  # immediately Stop the function
                 return
             data = q.get()
             if rec.AcceptWaveform(data):
@@ -215,7 +215,7 @@ def confirmCommand(action):
                            callback=callbackToListen):
         rec = vosk.KaldiRecognizer(model, samplerate)
         while True:
-            if abortExecution():    # immediately Stop the function
+            if abortExecution():  # immediately Stop the function
                 return
             data = q.get()
             if rec.AcceptWaveform(data):
@@ -273,23 +273,39 @@ def offPc():
         voice.speaker('cancel operation')
 
 
-def checkWeather():
+def getCurrentWeather():
     """
     This function uses the OpenWeatherMap API to get the weather information for Kyiv.
     """
+    city_name = 'Kyiv'
+    api_key = "f12828f8ec0437c8e5d17558fe5d2a0c"
     try:
-        params = {'q': 'Kyiv', 'units': 'metric', 'lang': 'en', 'appid': '2d44b0725ade625eede22d4c56bebb8e'}
-
-        #         response = requests.get('https://api.openweathermap.org/data/2.5/weather', params=params)
-        response = requests.get(
-            'http://api.openweathermap.org/geo/1.0/direct?q=Kyiv&appid=2d44b0725ade625eede22d4c56bebb8e')
-        print(response)
-        if response.status_code != 200:
-            raise Exception('Invalid response from API')
-
-        weather = response.json()
-        description = weather['weather'][0]['description']
-        temperature = round(weather['main']['temp'])
-        voice.speaker(f"Outside, it is {description} and {temperature} degrees Celsius.")
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}&units=metric"
+        response = requests.get(url)
+        data = response.json()
+        if response.status_code == 200:
+            # print(data)
+            formatWeatherData(data)
     except Exception as e:
-        voice.speaker(f"Could not connect to API: {e}")
+        print(f"Could not connect to API: {e}")
+
+
+def formatWeatherData(weather_data):
+    city = weather_data['name']
+    weather = weather_data['weather'][0]['description']
+    temperature = weather_data['main']['temp']
+    feels_like = weather_data['main']['feels_like']
+    humidity = weather_data['main']['humidity']
+    wind_speed = weather_data['wind']['speed']
+    wind_direction = weather_data['wind']['deg']
+    if 'rain' in weather_data:
+        precipitation = 'raining'
+    elif 'snow' in weather_data:
+        precipitation = 'snowing'
+    else:
+        precipitation = 'no rain or snow'
+    result = f"The weather in {city} is {weather}, {temperature:.1f} degrees Celsius. It feels like {feels_like:.1f} degrees Celsius. The humidity is {humidity}% and the wind speed is {wind_speed} m/s from {wind_direction} degrees. There is {precipitation}."
+    print(result)
+    voice.speaker(result)
+
+
