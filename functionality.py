@@ -10,6 +10,8 @@ import time
 import webbrowser
 import obswebsocket
 from PIL import ImageGrab
+
+from config import BOT_NAME
 from wordsCollections import phrases_printNote
 
 import voice
@@ -40,9 +42,9 @@ def offBot():
 
 def passive(reply):
     """Функция заглушка при простом диалоге с ботом"""
-    print(f"JARVIS: {reply}")
+    print(f"{BOT_NAME}: {reply}")
 
-
+git
 # 	pass
 
 def openTelegram():
@@ -145,11 +147,11 @@ def writeTheNote():
                 data = json.loads(rec.Result())['text']
                 print(f"USER: {data}")
                 data_array.append(data)  # add the spoken words to the array
-                voice.speaker(random.choice(phrases_printNote))  # select a random prompt from the collection
                 if data.lower() == 'stop recording':
                     createDocAndWrite(data_array)  # pass the array to createDocAndWrite() function
                     data_array.clear()
                     break  # stop listening when phrase collected
+                voice.speaker(random.choice(phrases_printNote))  # select a random prompt from the collection
             # else:
             #     print(rec.PartialResult())
 
@@ -172,20 +174,20 @@ def createDocAndWrite(data_array):
         print(f"Error could not dave document: {e}")
 
 
-# def sleepComputer():
-#     confirmation = ""
-#     while confirmation not in ["y", "n"]:
-#         confirmation = input("Are you sure you want to put the computer to sleep? (y/n): ")
-#     if confirmation.lower() == "y":
-#         try:
-# #             ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
-#             print('sleep')
-#         except Exception as e:
-#             print(f"Error going to sleep: {e}")
-#             voice.speaker('i cant execute this function, check the code')
-#     else:
-#         print("Aborted.")
-#         voice.speaker('cancel operation')
+def sleepComputer():
+    confirmation = ""
+    while confirmation not in ["y", "n"]:
+        confirmation = input("Are you sure you want to put the computer to sleep? (y/n): ")
+    if confirmation.lower() == "y":
+        try:
+            # ctypes.windll.PowrProf.SetSuspendState(0, 0, 0)
+            print('sleep')
+        except Exception as e:
+            print(f"Error going to sleep: {e}")
+            voice.speaker('i cant execute this function, check the code')
+    else:
+        print("Aborted.")
+        voice.speaker('cancel operation')
 
 
 # def sleepComputer():
