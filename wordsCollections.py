@@ -5,7 +5,7 @@ TRIGGERS = {BOT_NAME.lower(), f'{BOT_NAME}'}
 greetMessages = [
     f"Hello, Vlady. {BOT_NAME} is online and ready to serve!",
     "Greetings, Vlady. How can I assist you today?",
-    "Welcome back, Vlady. It's good to hear from you again.",
+    "Welcome back, Vlady. It's good to hear you again.",
     "Hi there, Vlady. How may I be of assistance?",
     "Good day, Vlady. How can I help you?",
     "Hello again, Vlady. What can I do for you?",
@@ -30,22 +30,35 @@ data_set = {
     'open telegram'             : 'openTelegram just a moment, opening telegram',
     'close telegram'            : 'closeTelegram yes, i am doing, closing telegram',
     'make a screenshot'         : 'takeScreenshot click clack',
-    'screenshot make'           : 'takeScreenshot click clack',
-    'record the text'           : 'writeTheNote alright , what do you want to   write? ',
-    'record the notes'          : 'writeTheNote alright , what do you want to   write? ',
+    'write the text'            : 'writeTheNote alright , what do you want to   write? ',
+    'write the notes'           : 'writeTheNote alright , what do you want to   write? ',
     'make system sleep'         : 'sleepComputer ok, preparing system to sleep',
-    'turn the computer off'     : 'offPc ok, preparing to turn off PC',
+    'turn computer off'         : 'offPc ok, preparing to turn off PC',
     'show me the weather'       : 'getCurrentWeather allright, im checking...',
     'what is the weather outside' : 'getCurrentWeather one moment, fetching...',
-    'hey, '                     : 'passive yes, master',
-    'are you there'             : 'passive hello, sir, what would u like me to do ?',
-    'hey you!'                  : 'passive greetings, i am ready to serve',
+    'hey, '                     : 'passive greetings, i am ready to serve',
+    'are you there'             : 'passive yes, im here',
+    'i need your help!'         : 'passive yes, master? how can i help?',
     'how are you doing'         : 'passive just working in background',
-    'hello'                     : 'passive yes ya im here',
-    'what can you do?'          : 'passive well, i can speak, thats good, right? ok, i can unswer simple words, can turn on '
-                                  'browser, can shutdown myself, can tell you my list of functionality, i guess thats all',
+    'hello'                     : 'passive hello, sir, what would u like me to do ?',
+    'who is Natalia'            : 'showNatalia she is a director of Backend on S2S, but she is lazy as hell',
+    'tell me more about Natalia': 'passive she dont like Penises in chat of KRYSY, and she can make you gloves ',
     'who is my best friend?'    : 'passive he is troll',
     'what is his name?'         : 'passive Val, Valera the badminton champion who dont like fat liashki',
     'stop working'              : 'offBot all right, im doing, good bye!',
     'shut down yourself'        : 'offBot oy kay im doing, see you!',
+    'restart yourself'          : 'restartBot oy kay im preparing to restart, be right back!',
+    'restart bot'               : 'restartBot yes im restarting, tou will not miss me',
+    'mute yourself'             : 'muteBot',
+    'mute mode'                 : 'muteBot',
+    'activate sound'            : 'unmuteBot',
+    'speak mode'                : 'unmuteBot',
+    'ask chatGPT'               : 'askGPT what do you want to know?',
+    'i have a question'         : 'askGPT what are you interested in?',
+
 }
+
+# check doble recognising
+# make Evernote api
+# check askGpt
+# make Extrime abort function

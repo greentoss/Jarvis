@@ -12,11 +12,7 @@ from functionality import *
 import voice
 import wordsCollections
 
-# pip install vosk
-# pip install sounddevice
-# pip install scikit-learn
-# pip install pyttsx3
-
+# pip install vosk # pip install sounddevice # pip install scikit-learn # pip install pyttsx3
 
 q = queue.Queue()
 model = vosk.Model('model-en')
@@ -27,9 +23,6 @@ samplerate = None
 
 
 # command: python -m sounddevice  #shows your devices indexes
-
-# device = sd.default.device = 0, 5      #input, output [1, 4]
-# samplerate = int(sd.query_devices(device[0], 'input')['default_samplerate'])
 
 def setDevice(input, output):
     global device, samplerate  # declare the variables as global to modify them
@@ -44,7 +37,7 @@ def callbackToListen(indata, frames, time, status):
     q.put(bytes(indata))
 
 
-def recognise(data, vectorizer, clf):
+def recognise(data, vectorizer, clf, rec):
     """
     Voice recognition analysis
     """
@@ -52,13 +45,13 @@ def recognise(data, vectorizer, clf):
     # check if botname trigger word is in data
     trigger = wordsCollections.TRIGGERS.intersection(data.split())
     if not trigger:
+        print('no trigger recognised')
         return
 
     # delete bot name from text
     data.replace(list(trigger)[0], '')
 
-    # get the vector of the text
-    # compare with variants, getting the most sufficient answer
+    # get the vector of the text, compare with variants, getting the most sufficient answer
     text_vector = vectorizer.transform([data]).toarray()[0]
     answer = clf.predict([text_vector])[0]
     #     print(answer)
@@ -73,7 +66,9 @@ def recognise(data, vectorizer, clf):
     # starting the function from "functionality"
     func = globals().get(func_name)
     if func:
-        if func.__code__.co_argcount > 0:
+        if func.__code__.co_argcount == 2:
+            func(reply, rec)
+        elif func.__code__.co_argcount == 1:
             func(reply)
         else:
             func()
@@ -93,10 +88,10 @@ def greetingMessage(messages):
 
 
 def main():
-    '''
+    """
     Teaching matrix AI
     and listen to microphone continuously
-    '''
+    """
     global device, samplerate  # declare the variables as global to access them
 
     greetingMessage(wordsCollections.greetMessages)
@@ -123,17 +118,13 @@ def main():
             if rec.AcceptWaveform(data):
                 data = json.loads(rec.Result())['text']
                 print(f"USER: {data}")
-                recognise(data, vectorizer, clf)
-
+                recognise(data, vectorizer, clf, rec)
             # else:
-            #     print(rec.PartialResult())
 
 
 #             data = json.loads(rec.PartialResult())['partial']
 #             print(data)
 
-
 if __name__ == '__main__':
     main()
-
 # command: python app.py
